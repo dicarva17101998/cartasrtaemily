@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Una carta para ti 🌷</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+<script>
+/* =====================================================================
+   ✏️  EDITA AQUÍ TU CARTA  ✏️
+   Solo cambia el texto entre comillas. No borres las comas ni las comillas.
+   ===================================================================== */
+const CONFIG = {
+  // Pantalla de inicio (sobre cerrado)
+  textoSobre: "Para ti, con amor",
+  textoBoton: "Toca el sobre para abrirlo",
+
+  // La carta
+  saludo: "Mi amor:",
+  parrafos: [
+    "Escribe aquí tu primer párrafo. Puedes contar cómo se conocieron, lo que sentiste la primera vez, o simplemente lo mucho que significa para ti.",
+    "Este es el segundo párrafo. Agrega o quita párrafos copiando una línea entera entre comillas y terminándola con una coma.",
+    "Como los tulipanes, que vuelven cada primavera, mi cariño por ti siempre vuelve a florecer."
+  ],
+  despedida: "Con todo mi amor,",
+  firma: "Tu nombre",
+
+  // La canción
+  // Pega el link de Spotify tal como lo copias desde la app
+  // (Compartir → Copiar enlace de la canción). También sirve con álbumes o playlists.
+  spotifyLink: "https://open.spotify.com/intl-es/track/1wDl0bVx65Eh7tekfnJWez",
+  tituloCancion: "Nombre de la canción",
+  artista: "Artista",
+  // Carátula: pon el nombre de una imagen que subas al repositorio (ej: "caratula.jpg")
+  // o un link a una imagen. Si lo dejas vacío "", se muestra un diseño de tulipán.
+  caratula: "",
+  textoCancion: "Nuestra canción 🎶"
+};
+/* ===================== FIN DE LA ZONA EDITABLE ===================== */
+</script>
+
+<style>
+  :root{
+    --cream:#fff8f3;
+    --paper:#fffdf9;
+    --rose:#e8577e;
+    --rose-dark:#b8325a;
+    --pink-soft:#fde3ea;
+    --leaf:#4c8c40;
+    --ink:#4a2a35;
+    --muted:#8a6470;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Cormorant Garamond',Georgia,serif;
+    color:var(--ink);
+    background:linear-gradient(180deg,#fde8ee 0%,#fff3ec 55%,#f4f9ee 100%);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+
+  /* ---------- Campo de tulipanes ---------- */
+  #field{
+    position:fixed;left:0;right:0;bottom:0;height:42vh;
+    pointer-events:none;z-index:0;
+  }
+  .tulip{
+    position:absolute;bottom:-6px;
+    transform-origin:50% 100%;
+    animation:grow 1.6s cubic-bezier(.2,.8,.3,1) both, sway 5s ease-in-out infinite alternate;
+  }
+  .tulip svg{display:block;width:100%;height:100%;overflow:visible}
+  @keyframes grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+  @keyframes sway{
+    from{rotate:-3deg}
+    to{rotate:3deg}
+  }
+
+  /* ---------- Pétalos que caen ---------- */
+  .petal{
+    position:fixed;top:-30px;z-index:1;pointer-events:none;
+    width:14px;height:18px;border-radius:70% 0 70% 0;
+    opacity:.8;
+    animation:fall linear forwards;
+  }
+  @keyframes fall{
+    to{transform:translate(var(--dx),110vh) rotate(var(--rot));opacity:.2}
+  }
+
+  /* ---------- Contenido ---------- */
+  main{
+    position:relative;z-index:2;
+    min-height:100vh;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:40px 16px 34vh;
+  }
+
+  /* ---------- Sobre ---------- */
+  #intro{text-align:center;transition:opacity .8s, transform .8s}
+  #intro.hide{opacity:0;transform:scale(.9) translateY(-20px);pointer-events:none}
+  .intro-title{
+    font-family:'Great Vibes',cursive;font-size:clamp(2.4rem,7vw,3.6rem);
+    color:var(--rose-dark);margin-bottom:28px;
+  }
+  .envelope{
+    position:relative;width:min(320px,82vw);aspect-ratio:3/2;margin:0 auto;
+    cursor:pointer;
+    filter:drop-shadow(0 18px 30px rgba(184,50,90,.25));
+    animation:float 3s ease-in-out infinite;
+  }
+  @keyframes float{50%{transform:translateY(-10px)}}
+  .env-back{position:absolute;inset:0;background:#f7c5d2;border-radius:10px}
+  .env-front{
+    position:absolute;inset:0;border-radius:10px;
+    background:
+      linear-gradient(to top right,#f3a9bd 50%,transparent 50.5%) left/50% 100% no-repeat,
+      linear-gradient(to top left,#f3a9bd 50%,transparent 50.5%) right/50% 100% no-repeat;
+  }
+  .env-flap{
+    position:absolute;left:0;right:0;top:0;height:60%;
+    background:#ee98b0;
+    clip-path:polygon(0 0,100% 0,50% 100%);
+    transform-origin:top;transition:transform .7s ease;
+    border-radius:10px 10px 0 0;
+  }
+  .envelope.open .env-flap{transform:rotateX(180deg)}
+  .seal{
+    position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);
+    width:58px;height:58px;border-radius:50%;
+    background:radial-gradient(circle at 35% 35%,#f06b90,#b8325a);
+    display:grid;place-items:center;font-size:26px;
+    box-shadow:0 3px 8px rgba(0,0,0,.2);
+    transition:opacity .4s;
+  }
+  .envelope.open .seal{opacity:0}
+  .hint{margin-top:26px;font-style:italic;color:var(--muted);font-size:1.15rem;animation:pulse 2s ease-in-out infinite}
+  @keyframes pulse{50%{opacity:.45}}
+
+  /* ---------- Carta ---------- */
+  #letter{
+    display:none;width:min(640px,100%);
+    background:var(--paper);
+    border-radius:18px;
+    padding:clamp(28px,6vw,56px);
+    box-shadow:0 20px 50px rgba(184,50,90,.18);
+    position:relative;
+    background-image:
+      repeating-linear-gradient(transparent 0 37px,rgba(232,87,126,.08) 37px 38px);
+  }
+  #letter.show{display:block;animation:unfold 1s cubic-bezier(.2,.8,.3,1) both}
+  @keyframes unfold{from{opacity:0;transform:translateY(40px) scale(.96)}to{opacity:1;transform:none}}
+  #letter::before{
+    content:"🌷";position:absolute;top:-22px;left:50%;transform:translateX(-50%);
+    font-size:40px;background:var(--paper);border-radius:50%;padding:2px 8px;
+  }
+  .greeting{
+    font-family:'Great Vibes',cursive;font-size:clamp(2.2rem,6vw,3rem);
+    color:var(--rose-dark);margin-bottom:18px;
+  }
+  .body p{
+    font-size:clamp(1.15rem,2.8vw,1.35rem);line-height:1.75;margin-bottom:18px;
+    opacity:0;transform:translateY(10px);transition:opacity .9s, transform .9s;
+  }
+  .body p.in{opacity:1;transform:none}
+  .closing{text-align:right;margin-top:26px;font-size:1.2rem;font-style:italic;color:var(--muted)}
+  .signature{
+    text-align:right;font-family:'Great Vibes',cursive;
+    font-size:clamp(2rem,5vw,2.6rem);color:var(--rose-dark);
+  }
+
+  /* ---------- Canción ---------- */
+  .song{
+    margin-top:40px;padding-top:30px;border-top:1px dashed #f0b6c6;
+    text-align:center;
+  }
+  .song-label{font-family:'Great Vibes',cursive;font-size:2rem;color:var(--rose);margin-bottom:20px}
+  .record-wrap{
+    position:relative;width:min(230px,62vw);aspect-ratio:1;margin:0 auto 18px;
+    display:block;text-decoration:none;
+  }
+  .vinyl{
+    position:absolute;inset:0;border-radius:50%;
+    background:repeating-radial-gradient(circle,#1a1a1a 0 2px,#262626 2px 4px);
+    transform:translateX(18%);
+    animation:spin 6s linear infinite;
+    box-shadow:0 8px 20px rgba(0,0,0,.25);
+  }
+  .vinyl::after{
+    content:"";position:absolute;inset:38%;border-radius:50%;background:var(--rose);
+    box-shadow:0 0 0 4px #1a1a1a;
+  }
+  @keyframes spin{to{transform:translateX(18%) rotate(360deg)}}
+  .cover{
+    position:absolute;inset:0;border-radius:12px;overflow:hidden;
+    box-shadow:0 10px 26px rgba(0,0,0,.25);
+    background:linear-gradient(135deg,#f6a5bd,#e8577e 60%,#b8325a);
+    display:grid;place-items:center;
+    transition:transform .3s;
+  }
+  .record-wrap:hover .cover{transform:translateX(-6%) rotate(-3deg)}
+  .cover img{width:100%;height:100%;object-fit:cover;display:block}
+  .cover .fallback{font-size:5rem}
+  .song-title{font-size:1.5rem;font-weight:600}
+  .song-artist{color:var(--muted);font-style:italic;margin-bottom:18px}
+  .spotify-frame{width:100%;height:152px;border:0;border-radius:12px}
+  .spotify-btn{
+    display:inline-block;margin-top:14px;padding:10px 22px;border-radius:999px;
+    background:#1db954;color:#fff;text-decoration:none;font-family:sans-serif;font-size:.95rem;font-weight:600;
+  }
+  .spotify-btn:hover{background:#17a54a}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none!important;transition:none!important}
+    .body p{opacity:1;transform:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="field"></div>
+
+<main>
+  <!-- Sobre -->
+  <section id="intro">
+    <h1 class="intro-title" id="envTitle"></h1>
+    <div class="envelope" id="envelope" role="button" tabindex="0" aria-label="Abrir carta">
+      <div class="env-back"></div>
+      <div class="env-front"></div>
+      <div class="env-flap"></div>
+      <div class="seal">🌷</div>
+    </div>
+    <p class="hint" id="envHint"></p>
+  </section>
+
+  <!-- Carta -->
+  <article id="letter">
+    <h2 class="greeting" id="greeting"></h2>
+    <div class="body" id="body"></div>
+    <p class="closing" id="closing"></p>
+    <p class="signature" id="signature"></p>
+
+    <section class="song" id="song">
+      <p class="song-label" id="songLabel"></p>
+      <a class="record-wrap" id="recordLink" target="_blank" rel="noopener">
+        <div class="vinyl"></div>
+        <div class="cover" id="cover"></div>
+      </a>
+      <p class="song-title" id="songTitle"></p>
+      <p class="song-artist" id="songArtist"></p>
+      <div id="embed"></div>
+    </section>
+  </article>
+</main>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+
+  /* ---- Rellenar textos ---- */
+  $('envTitle').textContent = CONFIG.textoSobre;
+  $('envHint').textContent = CONFIG.textoBoton;
+  $('greeting').textContent = CONFIG.saludo;
+  CONFIG.parrafos.forEach(t => {
+    const p = document.createElement('p');
+    p.textContent = t;
+    $('body').appendChild(p);
+  });
+  $('closing').textContent = CONFIG.despedida;
+  $('signature').textContent = CONFIG.firma;
+
+  /* ---- Canción ---- */
+  $('songLabel').textContent = CONFIG.textoCancion;
+  $('songTitle').textContent = CONFIG.tituloCancion;
+  $('songArtist').textContent = CONFIG.artista;
+  $('recordLink').href = CONFIG.spotifyLink || '#';
+
+  if (CONFIG.caratula) {
+    const img = document.createElement('img');
+    img.src = CONFIG.caratula;
+    img.alt = 'Carátula de ' + CONFIG.tituloCancion;
+    $('cover').appendChild(img);
+  } else {
+    $('cover').innerHTML = '<span class="fallback">🌷</span>';
+  }
+
+  const m = (CONFIG.spotifyLink || '').match(/open\.spotify\.com\/(?:intl-[a-z-]+\/)?(track|album|playlist|episode)\/([A-Za-z0-9]+)/);
+  if (m) {
+    const iframe = document.createElement('iframe');
+    iframe.className = 'spotify-frame';
+    iframe.src = `https://open.spotify.com/embed/${m[1]}/${m[2]}?utm_source=generator`;
+    iframe.allow = 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture';
+    iframe.loading = 'lazy';
+    $('embed').appendChild(iframe);
+  }
+  if (CONFIG.spotifyLink) {
+    const a = document.createElement('a');
+    a.className = 'spotify-btn';
+    a.href = CONFIG.spotifyLink;
+    a.target = '_blank'; a.rel = 'noopener';
+    a.textContent = '▶ Escuchar en Spotify';
+    $('embed').appendChild(a);
+  }
+
+  /* ---- Campo de tulipanes ---- */
+  const colors = ['#e8577e','#f06b90','#d6336c','#ff8fab','#f4a261','#c77dff','#ffb3c6','#e63946'];
+  const tulipSVG = c => `
+    <svg viewBox="0 0 60 160" style="color:${c}">
+      <path d="M30 58 Q33 110 30 160" stroke="#3f7d3a" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <path d="M30 132 Q6 112 9 84 Q28 100 30 126Z" fill="#5a9e4b"/>
+      <path d="M31 146 Q54 120 51 92 Q34 108 31 138Z" fill="#4c8c40"/>
+      <path d="M13 28 Q11 58 30 64 Q49 58 47 28 Q41 40 37 20 Q32 34 30 34 Q28 34 23 20 Q19 40 13 28Z" fill="currentColor"/>
+      <path d="M22 26 Q30 6 38 26 Q39 50 30 60 Q21 50 22 26Z" fill="#fff" opacity=".18"/>
+    </svg>`;
+
+  function plantField(){
+    const field = $('field');
+    field.innerHTML = '';
+    const w = window.innerWidth;
+    const count = Math.round(w / 38);
+    for (let i = 0; i < count; i++) {
+      const t = document.createElement('div');
+      t.className = 'tulip';
+      const h = 90 + Math.random() * 140;
+      t.style.height = h + 'px';
+      t.style.width = (h * 0.375) + 'px';
+      t.style.left = (i / count * 100 + (Math.random() * 3 - 1.5)) + '%';
+      t.style.zIndex = Math.round(300 - h);
+      t.style.animationDelay = (Math.random() * 1.2) + 's,' + (Math.random() * -5) + 's';
+      t.innerHTML = tulipSVG(colors[Math.floor(Math.random() * colors.length)]);
+      field.appendChild(t);
+    }
+  }
+  plantField();
+  let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(plantField, 300); });
+
+  /* ---- Pétalos ---- */
+  function petal(){
+    const p = document.createElement('div');
+    p.className = 'petal';
+    p.style.left = Math.random() * 100 + 'vw';
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.setProperty('--dx', (Math.random() * 200 - 100) + 'px');
+    p.style.setProperty('--rot', (Math.random() * 720 - 360) + 'deg');
+    const dur = 7 + Math.random() * 6;
+    p.style.animationDuration = dur + 's';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), dur * 1000);
+  }
+  setInterval(petal, 900);
+
+  /* ---- Abrir el sobre ---- */
+  function openLetter(){
+    const env = $('envelope');
+    if (env.classList.contains('open')) return;
+    env.classList.add('open');
+    for (let i = 0; i < 15; i++) setTimeout(petal, i * 60);
+    setTimeout(() => $('intro').classList.add('hide'), 700);
+    setTimeout(() => {
+      $('intro').style.display = 'none';
+      $('letter').classList.add('show');
+      window.scrollTo({top:0, behavior:'smooth'});
+      document.querySelectorAll('.body p').forEach((p, i) =>
+        setTimeout(() => p.classList.add('in'), 600 + i * 700));
+    }, 1400);
+  }
+  $('envelope').addEventListener('click', openLetter);
+  $('envelope').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') openLetter(); });
+})();
+</script>
+</body>
+</html>
